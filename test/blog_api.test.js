@@ -82,6 +82,39 @@ describe('Pruebas de la API de Blogs (4.8 - 4.12)', () => {
   })
 })
 
+  test('eliminar un blog responde con estado 204 si el id es valido', async () => {
+    const blogsAtStart = await helper.blogsInDb()
+    const blogToDelete = blogsAtStart[0]
+
+    await api
+      .delete(`/api/blogs/${blogToDelete.id}`)
+      .expect(204)
+
+    const blogsAtEnd = await helper.blogsInDb()
+    assert.strictEqual(blogsAtEnd.length, helper.initialBlogs.length - 1)
+
+    const titles = blogsAtEnd.map(b => b.title)
+    assert.ok(!titles.includes(blogToDelete.title))
+  })
+
+  test('actualizar los likes de un blog correctamente', async () => {
+    const blogsAtStart = await helper.blogsInDb()
+    const blogToUpdate = blogsAtStart[0]
+
+    const updatedData = {
+      ...blogToUpdate,
+      likes: blogToUpdate.likes + 10
+    }
+
+    const response = await api
+      .put(`/api/blogs/${blogToUpdate.id}`)
+      .send(updatedData)
+      .expect(200)
+
+    assert.strictEqual(response.body.likes, blogToUpdate.likes + 10)
+  })
+
+
 after(async () => {
   await mongoose.connection.close()
 })
